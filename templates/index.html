@@ -94,8 +94,30 @@
               <option value="blur">Gaussian Blur</option>
               <option value="threshold">Thresholding</option>
               <option value="hist_eq">Histogram Equalization</option>
+              <option value="compress">Compress Image</option>
             </select>
             <label for="dipOperationSelect">Digital Image Processing</label>
+          </div>
+        </div>
+
+        <label for="advancedOperationSelect" class="form-label">
+          Select an advanced operation:
+        </label>
+        <div class="mb-3">
+          <div class="form-floating">
+            <select
+              name="advanced_operation"
+              class="form-select"
+              id="advancedOperationSelect"
+            >
+              <option value="">Choose an advanced operation</option>
+              <option value="rotate_left">Rotate Left</option>
+              <option value="rotate_right">Rotate Right</option>
+              <option value="flip_horizontal">Flip Horizontal</option>
+              <option value="flip_vertical">Flip Vertical</option>
+              <option value="center_crop">Center Crop</option>
+            </select>
+            <label for="advancedOperationSelect">Advanced Image Editing</label>
           </div>
         </div>
 

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, flash, redirect, url_for
+from flask import Flask, render_template, request, flash, redirect
 from werkzeug.utils import secure_filename
 import os
 import cv2
@@ -13,13 +13,12 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def processImage(filename, operation, dip_operation):
-    print(f"Processing - Operation: {operation}, DIP Operation: {dip_operation}")  # Debugging
+def processImage(filename, operation, dip_operation, advanced_operation):
+    print(f"Processing - Operation: {operation}, DIP Operation: {dip_operation}, Advanced: {advanced_operation}")
 
     img = cv2.imread(f"uploads/{filename}")
     newFilename = f"static/{filename}"
 
-    # Handle format conversions
     if operation in ["cgray", "cwebp", "cjpeg", "cpng"]:
         if operation == "cgray":
             imgProcessed = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -32,8 +31,9 @@ def processImage(filename, operation, dip_operation):
         elif operation == "cpng":
             newFilename = f"static/{filename.split('.')[0]}.png"
             imgProcessed = img
+        cv2.imwrite(newFilename, imgProcessed)
+        return newFilename
 
-    # Handle DIP operations
     elif dip_operation in ["edge", "blur", "threshold", "hist_eq"]:
         if dip_operation == "edge":
             imgProcessed = cv2.Canny(img, 100, 200)
@@ -45,13 +45,42 @@ def processImage(filename, operation, dip_operation):
         elif dip_operation == "hist_eq":
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             imgProcessed = cv2.equalizeHist(gray)
+        cv2.imwrite(newFilename, imgProcessed)
+        return newFilename
 
-    else:
-        return None  # Return None if no valid operation
+    elif advanced_operation in ["rotate_left", "rotate_right", "flip_horizontal", "flip_vertical", "center_crop", "compress"]:
+        if advanced_operation == "rotate_left":
+            imgProcessed = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        elif advanced_operation == "rotate_right":
+            imgProcessed = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+        elif advanced_operation == "flip_horizontal":
+            imgProcessed = cv2.flip(img, 1)
+        elif advanced_operation == "flip_vertical":
+            imgProcessed = cv2.flip(img, 0)
+        elif advanced_operation == "center_crop":
+            h, w = img.shape[:2]
+            min_dim = min(h, w)
+            start_x = w//2 - min_dim//2
+            start_y = h//2 - min_dim//2
+            imgProcessed = img[start_y:start_y+min_dim, start_x:start_x+min_dim]
+        elif advanced_operation == "compress":
+            ext = filename.rsplit('.', 1)[1].lower()
+            newFilename = f"static/{filename.split('.')[0]}_compressed.{ext}"
+            if ext in ['jpg', 'jpeg']:
+                cv2.imwrite(newFilename, img, [int(cv2.IMWRITE_JPEG_QUALITY), 50])
+                return newFilename
+            elif ext == 'webp':
+                cv2.imwrite(newFilename, img, [int(cv2.IMWRITE_WEBP_QUALITY), 50])
+                return newFilename
+            else:
+                imgProcessed = img  # fallback for unsupported formats
+                cv2.imwrite(newFilename, imgProcessed)
+                return newFilename
 
-    cv2.imwrite(newFilename, imgProcessed)
-    return newFilename
+        cv2.imwrite(newFilename, imgProcessed)
+        return newFilename
 
+    return None
 
 @app.route("/")
 def home():
@@ -62,8 +91,7 @@ def edit():
     if request.method == "POST":
         operation = request.form.get("operation", "").strip()
         dip_operation = request.form.get("dip_operation", "").strip()
-        
-        print(f"Received operation: {operation}, DIP operation: {dip_operation}")  # Debugging
+        advanced_operation = request.form.get("advanced_operation", "").strip()
 
         if 'file' not in request.files:
             flash('No file part')
@@ -77,16 +105,15 @@ def edit():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            
-            new = processImage(filename, operation, dip_operation)
+            new = processImage(filename, operation, dip_operation, advanced_operation)
             if new:
                 flash(f"Image processed successfully. Download it <a href='/{new}' target='_blank'>here</a>.")
             else:
-                flash("Invalid operation selected.")  # Error message
+                flash("Invalid operation selected.")
 
             return render_template("index.html")
 
     return render_template("index.html")
 
-
-app.run(debug=True)
+if __name__ == "__main__":
+    app.run(debug=True)
