@@ -4,11 +4,68 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Image Conversion</title>
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+        background: linear-gradient(160deg, #101010, #2d2d2d, #4d432a);
+/* Black -> Dark Gray -> Very Dark Desaturated Gold/Olive */
+
+
+        color: white;
+      }
+
+      .form-label {
+        color: gold;
+        font-weight: 500;
+      }
+
+      .btn-outline-warning {
+        border-width: 2px;
+      }
+
+      .form-select {
+        background-color: #1c1c1e;
+        color: gold;
+        border: none;
+      }
+
+      .form-control {
+        background-color: #1c1c1e;
+        color: white;
+        border: none;
+      }
+
+      .form-floating > label {
+        color: gold;
+      }
+
+      .img-thumbnail {
+        border-radius: 0.75rem;
+      }
+      #drop-zone:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  transition: background-color 0.3s ease-in-out;
+}
+
+    </style>
+
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
       integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
       crossorigin="anonymous"
+    />
+
+    <!-- Google Font -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Bootstrap Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
     />
   </head>
   <body class="bg-black">
@@ -42,7 +99,8 @@
     {% with messages = get_flashed_messages(with_categories=true) %} {% if
     messages %} {% for category, message in messages %}
     <div class="alert alert-warning alert-dismissible fade show" role="alert">
-      <strong>Success!</strong> {{ message | safe}}
+      <i class="bi bi-check-circle-fill me-2"></i><strong>Success!</strong> {{
+      message | safe}}
       <button
         type="button"
         class="btn-close"
@@ -53,103 +111,203 @@
     {% endfor %} {% endif %} {% endwith %}
 
     <!-- Title and Form -->
-    <div class="container mt-4">
-      <h1 class="text-center text-light mb-5">Edit your image on the go!</h1>
-      <form action="/edit" method="post" enctype="multipart/form-data">
-        <div class="mb-3">
-          <label for="formFile" class="form-label"
-            >Select an image to edit:</label
+    <div class="container mt-5">
+      <div class="card bg-dark border-0 shadow-lg rounded-4 p-4">
+        <div class="card-body">
+          <h2 class="text-center text-warning fw-bold mb-4">Edit Your Image On The GO!</h2>
+          <form action="/edit" method="post" enctype="multipart/form-data">
+    
+            <div class="mb-3">
+              <label for="formFile" class="form-label">Upload your image (drag & drop supported):</label>
+              <div id="drop-zone" class="border border-warning border-2 rounded-4 p-4 text-center" style="cursor: pointer;">
+                <i class="bi bi-cloud-arrow-up-fill fs-1 text-warning mb-2"></i>
+                <p class="text-white">Drag and drop an image here or click to select</p>
+                <input class="form-control d-none" type="file" name="file" id="formFile" />
+              </div>
+            </div>
+            <div id="preview-container" class="mt-3 text-center">
+              <img id="image-preview" src="#" alt="Image Preview" class="img-fluid rounded-3 d-none" style="max-height: 300px;" />
+            </div>
+            
+
+          <label for="operationSelect" class="form-label"
+            >Select an operation to perform:</label
           >
-          <input class="form-control" type="file" name="file" id="formFile" />
-        </div>
-
-        <label for="operationSelect" class="form-label"
-          >Select an operation to perform:</label
-        >
-        <div class="mb-3">
-          <div class="form-floating">
-            <select name="operation" class="form-select" id="operationSelect">
-              <option value="">Choose an operation</option>
-              <option value="cpng">Convert to PNG</option>
-              <option value="cgray">Convert to Grayscale</option>
-              <option value="cwebp">Convert to Webp</option>
-              <option value="cjpeg">Convert to Jpg</option>
-            </select>
-            <label for="operationSelect">Image Format Conversion</label>
+          <div class="mb-3">
+            <div class="form-floating">
+              <select name="operation" class="form-select" id="operationSelect">
+                <option value="">Choose an operation</option>
+                <option value="cpng">Convert to PNG</option>
+                <option value="cgray">Convert to Grayscale</option>
+                <option value="cwebp">Convert to Webp</option>
+                <option value="cjpeg">Convert to Jpg</option>
+              </select>
+              <label for="operationSelect">Image Format Conversion</label>
+            </div>
           </div>
-        </div>
 
-        <label for="dipOperationSelect" class="form-label"
-          >Select a DIP operation:</label
-        >
-        <div class="mb-3">
-          <div class="form-floating">
-            <select
-              name="dip_operation"
-              class="form-select"
-              id="dipOperationSelect"
+          <label for="dipOperationSelect" class="form-label"
+            >Select a DIP operation:</label
+          >
+          <div class="mb-3">
+            <div class="form-floating">
+              <select
+                name="dip_operation"
+                class="form-select"
+                id="dipOperationSelect"
+              >
+                <option value="">Choose a DIP operation</option>
+                <option value="edge">Edge Detection (Canny)</option>
+                <option value="blur">Gaussian Blur</option>
+                <option value="threshold">Thresholding</option>
+                <option value="hist_eq">Histogram Equalization</option>
+                <option value="compress">Compress Image</option>
+              </select>
+              <label for="dipOperationSelect">Digital Image Processing</label>
+            </div>
+          </div>
+
+          <label for="advancedOperationSelect" class="form-label">
+            Select an advanced operation:
+          </label>
+          <div class="mb-3">
+            <div class="form-floating">
+              <select
+                name="advanced_operation"
+                class="form-select"
+                id="advancedOperationSelect"
+              >
+                <option value="">Choose an advanced operation</option>
+                <option value="rotate_left">Rotate Left</option>
+                <option value="rotate_right">Rotate Right</option>
+                <option value="flip_horizontal">Flip Horizontal</option>
+                <option value="flip_vertical">Flip Vertical</option>
+                <option value="center_crop">Center Crop</option>
+              </select>
+              <label for="advancedOperationSelect">Advanced Image Editing</label>
+            </div>
+          </div>
+          <div id="loadingSpinner" class="text-center d-none">
+            <div class="spinner-border text-warning" role="status">
+              <span class="visually-hidden">Processing...</span>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="text-center">
+            <button
+              type="submit"
+              class="btn btn-warning btn-lg rounded-pill px-5 shadow"
             >
-              <option value="">Choose a DIP operation</option>
-              <option value="edge">Edge Detection (Canny)</option>
-              <option value="blur">Gaussian Blur</option>
-              <option value="threshold">Thresholding</option>
-              <option value="hist_eq">Histogram Equalization</option>
-              <option value="compress">Compress Image</option>
-            </select>
-            <label for="dipOperationSelect">Digital Image Processing</label>
+              <i class="bi bi-magic"></i> Process Image
+            </button>
+          </div>
+          </div>
+        </form>
+
+      <!-- // Sample Image Section -->
+      <div class="card bg-secondary bg-opacity-10 border-0 mt-5 p-3 rounded-4 shadow-sm">
+        <div class="card-body text-center">
+          <a
+            href="static/sample.png"
+            download="static/sample.png"
+          >
+            <button type="button" class="btn btn-outline-warning rounded-pill px-4 mb-3">
+              <i class="bi bi-download"></i> Download Sample Image
+            </button>
+          </a>
+          <div>
+            <img
+              src="static\file_example_PNG_2100kB_1.jpg"
+              class="img-fluid rounded shadow-sm mt-3"
+              style="max-height: 250px"
+              alt="Sample Preview"
+            />
           </div>
         </div>
-
-        <label for="advancedOperationSelect" class="form-label">
-          Select an advanced operation:
-        </label>
-        <div class="mb-3">
-          <div class="form-floating">
-            <select
-              name="advanced_operation"
-              class="form-select"
-              id="advancedOperationSelect"
-            >
-              <option value="">Choose an advanced operation</option>
-              <option value="rotate_left">Rotate Left</option>
-              <option value="rotate_right">Rotate Right</option>
-              <option value="flip_horizontal">Flip Horizontal</option>
-              <option value="flip_vertical">Flip Vertical</option>
-              <option value="center_crop">Center Crop</option>
-            </select>
-            <label for="advancedOperationSelect">Advanced Image Editing</label>
-          </div>
-        </div>
-
-        <div class="text-center">
-          <button type="submit" class="btn btn-outline-warning btn-lg w-25">
-            Submit
-          </button>
-        </div>
-      </form>
-
-      <a
-        href="static\file_example_PNG_2100kB.png"
-        download="static\file_example_PNG_2100kB.jpg"
-      >
-        <button type="button" class="btn btn-warning mt-5">
-          <i class="bi bi-download"></i>Download sample image
-          <i class="bi bi-download"></i>
-        </button> </a
-      ><br />
-      <img
-        src="static\file_example_PNG_2100kB.jpg"
-        width="300"
-        height="200"
-        alt=""
-        class="img-thumbnail mt-2"
-      />
-    </div>
+      </div>
+      
 
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
       integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
       crossorigin="anonymous"
     ></script>
+    <script>
+      const dropZone = document.getElementById("drop-zone");
+      const fileInput = document.getElementById("formFile");
+    
+      dropZone.addEventListener("click", () => fileInput.click());
+    
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("bg-dark", "bg-opacity-25");
+      });
+    
+      dropZone.addEventListener("dragleave", () => {
+        dropZone.classList.remove("bg-dark", "bg-opacity-25");
+      });
+    
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("bg-dark", "bg-opacity-25");
+    
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          fileInput.files = files;
+        }
+      });
+    </script>
+
+<!-- // Preview Image Script -->
+<script>
+  const dropZone1 = document.getElementById("drop-zone");
+  const fileInput1 = document.getElementById("formFile");
+  const preview = document.getElementById("image-preview");
+
+  dropZone1.addEventListener("click", () => fileInput1.click());
+
+  dropZone1.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropZone1.classList.add("bg-dark", "bg-opacity-25");
+  });
+
+  dropZone1.addEventListener("dragleave", () => {
+    dropZone1.classList.remove("bg-dark", "bg-opacity-25");
+  });
+
+  dropZone1.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropZone1.classList.remove("bg-dark", "bg-opacity-25");
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      fileInput1.files = files;
+      previewImage(files[0]);
+    }
+  });
+
+  fileInput1.addEventListener("change", () => {
+    if (fileInput1.files.length > 0) {
+      previewImage(fileInput1.files[0]);
+    }
+  });
+
+  function previewImage(file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      preview.src = e.target.result;
+      preview.classList.remove("d-none");
+    };
+    reader.readAsDataURL(file);
+  }
+</script>
+
+    
+    <script>
+      document.querySelector("form").addEventListener("submit", () => {
+        document.getElementById("loadingSpinner").classList.remove("d-none");
+      });
+    </script>
   </body>
 </html>

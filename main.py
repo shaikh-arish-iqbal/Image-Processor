@@ -39,12 +39,25 @@ def processImage(filename, operation, dip_operation, advanced_operation):
             imgProcessed = cv2.Canny(img, 100, 200)
         elif dip_operation == "blur":
             imgProcessed = cv2.GaussianBlur(img, (7, 7), 0)
-        elif dip_operation == "threshold":
+        elif dip_operation == "threshold": 
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             _, imgProcessed = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
         elif dip_operation == "hist_eq":
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             imgProcessed = cv2.equalizeHist(gray)
+        elif dip_operation == "compress":
+            ext = filename.rsplit('.', 1)[1].lower()
+            newFilename = f"static/{filename.split('.')[0]}_compressed.{ext}"
+            if ext in ['jpg', 'jpeg']:
+                cv2.imwrite(newFilename, img, [int(cv2.IMWRITE_JPEG_QUALITY), 50])
+                return newFilename
+            elif ext == 'webp':
+                cv2.imwrite(newFilename, img, [int(cv2.IMWRITE_WEBP_QUALITY), 50])
+                return newFilename
+            else:
+                imgProcessed = img  # fallback for unsupported formats
+                cv2.imwrite(newFilename, imgProcessed)
+                return newFilename
         cv2.imwrite(newFilename, imgProcessed)
         return newFilename
 
@@ -63,19 +76,6 @@ def processImage(filename, operation, dip_operation, advanced_operation):
             start_x = w//2 - min_dim//2
             start_y = h//2 - min_dim//2
             imgProcessed = img[start_y:start_y+min_dim, start_x:start_x+min_dim]
-        elif advanced_operation == "compress":
-            ext = filename.rsplit('.', 1)[1].lower()
-            newFilename = f"static/{filename.split('.')[0]}_compressed.{ext}"
-            if ext in ['jpg', 'jpeg']:
-                cv2.imwrite(newFilename, img, [int(cv2.IMWRITE_JPEG_QUALITY), 50])
-                return newFilename
-            elif ext == 'webp':
-                cv2.imwrite(newFilename, img, [int(cv2.IMWRITE_WEBP_QUALITY), 50])
-                return newFilename
-            else:
-                imgProcessed = img  # fallback for unsupported formats
-                cv2.imwrite(newFilename, imgProcessed)
-                return newFilename
 
         cv2.imwrite(newFilename, imgProcessed)
         return newFilename
@@ -112,6 +112,11 @@ def edit():
                 flash("Invalid operation selected.")
 
             return render_template("index.html")
+        
+        if not (operation or dip_operation or advanced_operation):
+            flash("Please select at least one operation.")
+            return redirect(request.url)
+
 
     return render_template("index.html")
 
