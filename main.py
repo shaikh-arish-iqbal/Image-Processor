@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, flash, redirect
 from werkzeug.utils import secure_filename
 import os
 import cv2
+import numpy as np  # Import numpy for creating the kernel
 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'webp', 'png', 'jpg', 'jpeg', 'gif'}
@@ -34,12 +35,12 @@ def processImage(filename, operation, dip_operation, advanced_operation):
         cv2.imwrite(newFilename, imgProcessed)
         return newFilename
 
-    elif dip_operation in ["edge", "blur", "threshold", "hist_eq"]:
+    elif dip_operation in ["edge", "blur", "threshold", "hist_eq", "compress", "erosion", "dilation", "opening", "closing"]:
         if dip_operation == "edge":
             imgProcessed = cv2.Canny(img, 100, 200)
         elif dip_operation == "blur":
             imgProcessed = cv2.GaussianBlur(img, (7, 7), 0)
-        elif dip_operation == "threshold": 
+        elif dip_operation == "threshold":
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             _, imgProcessed = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
         elif dip_operation == "hist_eq":
@@ -58,6 +59,18 @@ def processImage(filename, operation, dip_operation, advanced_operation):
                 imgProcessed = img  # fallback for unsupported formats
                 cv2.imwrite(newFilename, imgProcessed)
                 return newFilename
+        elif dip_operation == "erosion":
+            kernel = np.ones((5, 5), np.uint8)
+            imgProcessed = cv2.erode(img, kernel, iterations=1)
+        elif dip_operation == "dilation":
+            kernel = np.ones((5, 5), np.uint8)
+            imgProcessed = cv2.dilate(img, kernel, iterations=1)
+        elif dip_operation == "opening":
+            kernel = np.ones((5, 5), np.uint8)
+            imgProcessed = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
+        elif dip_operation == "closing":
+            kernel = np.ones((5, 5), np.uint8)
+            imgProcessed = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)
         cv2.imwrite(newFilename, imgProcessed)
         return newFilename
 
@@ -76,6 +89,19 @@ def processImage(filename, operation, dip_operation, advanced_operation):
             start_x = w//2 - min_dim//2
             start_y = h//2 - min_dim//2
             imgProcessed = img[start_y:start_y+min_dim, start_x:start_x+min_dim]
+        elif advanced_operation == "compress":
+            ext = filename.rsplit('.', 1)[1].lower()
+            newFilename = f"static/{filename.split('.')[0]}_compressed_adv.{ext}" # Different name to avoid conflict
+            if ext in ['jpg', 'jpeg']:
+                cv2.imwrite(newFilename, img, [int(cv2.IMWRITE_JPEG_QUALITY), 50])
+                return newFilename
+            elif ext == 'webp':
+                cv2.imwrite(newFilename, img, [int(cv2.IMWRITE_WEBP_QUALITY), 50])
+                return newFilename
+            else:
+                imgProcessed = img  # fallback for unsupported formats
+                cv2.imwrite(newFilename, imgProcessed)
+                return newFilename
 
         cv2.imwrite(newFilename, imgProcessed)
         return newFilename
@@ -112,11 +138,10 @@ def edit():
                 flash("Invalid operation selected.")
 
             return render_template("index.html")
-        
+
         if not (operation or dip_operation or advanced_operation):
             flash("Please select at least one operation.")
             return redirect(request.url)
-
 
     return render_template("index.html")
 

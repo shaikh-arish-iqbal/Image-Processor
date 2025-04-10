@@ -151,21 +151,25 @@
           >
           <div class="mb-3">
             <div class="form-floating">
-              <select
-                name="dip_operation"
-                class="form-select"
-                id="dipOperationSelect"
-              >
-                <option value="">Choose a DIP operation</option>
-                <option value="edge">Edge Detection (Canny)</option>
-                <option value="blur">Gaussian Blur</option>
-                <option value="threshold">Thresholding</option>
-                <option value="hist_eq">Histogram Equalization</option>
-                <option value="compress">Compress Image</option>
-              </select>
-              <label for="dipOperationSelect">Digital Image Processing</label>
+                <select
+                    name="dip_operation"
+                    class="form-select"
+                    id="dipOperationSelect"
+                >
+                    <option value="">Choose a DIP operation</option>
+                    <option value="edge">Edge Detection (Canny)</option>
+                    <option value="blur">Gaussian Blur</option>
+                    <option value="threshold">Thresholding</option>
+                    <option value="hist_eq">Histogram Equalization</option>
+                    <option value="compress">Compress Image</option>
+                    <option value="erosion">Erosion</option>
+                    <option value="dilation">Dilation</option>
+                    <option value="opening">Opening (Erosion followed by Dilation)</option>
+                    <option value="closing">Closing (Dilation followed by Erosion)</option>
+                </select>
+                <label for="dipOperationSelect">Digital Image Processing</label>
             </div>
-          </div>
+        </div>
 
           <label for="advancedOperationSelect" class="form-label">
             Select an advanced operation:
